@@ -1,6 +1,8 @@
-import React from 'react'
+import React from 'react';
 
 function Navbar() {
+
+  
   return (
     <>
     <div className='max-w-screen-2xl mx-auto container px-6 py-3 md:px-40 shadow-lg h-16 fixed'>
@@ -13,4 +15,4 @@ function Navbar() {
   )
 }
 
-export default Navbar
+export default Navbar;
