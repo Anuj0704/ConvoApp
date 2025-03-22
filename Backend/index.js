@@ -3,6 +3,65 @@ const multer = require("multer");
 const cors = require("cors");
 const docxToPDF = require("docx-pdf");
 const path = require("path");
+const fs = require("fs");
+
+const app = express();
+const port = 3000;
+
+app.use(cors());
+
+// Use temporary directory for uploaded files
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        const uploadPath = "/tmp/uploads"; // ✅ Use /tmp instead of uploads
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+    },
+    filename: function(req, file, cb) {
+        cb(null, file.originalname);
+    },
+});
+
+const upload = multer({ storage: storage });
+
+app.post("/convertFile", upload.single("file"), (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        // Define output path in /tmp
+        let outputPath = path.join("/tmp", `${req.file.originalname}.pdf`);
+
+        docxToPDF(req.file.path, outputPath, (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({ message: "Error converting docx to pdf" });
+            }
+            res.download(outputPath, () => {
+                console.log("File downloaded");
+            });
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server is listening on port ${port}`);
+});
+
+
+
+
+/*const express = require("express");
+const multer = require("multer");
+const cors = require("cors");
+const docxToPDF = require("docx-pdf");
+const path = require("path");
 
 const app = express();
 const port = 3000;
@@ -28,6 +87,8 @@ app.post("/convertFile", upload.single("file"), (req, res, next) => {
                 message: "No file  uploaded",
             });
         }
+
+        
         // Defining outout file path
         let outputPath = path.join(
             __dirname,
@@ -56,4 +117,4 @@ app.post("/convertFile", upload.single("file"), (req, res, next) => {
 
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
-});
+});*/
